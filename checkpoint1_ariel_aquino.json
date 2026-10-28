@@ -1,0 +1,189 @@
+{
+  "name": "Asistente de proveedores",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6b804b70-cd8c-4a22-88fd-c3b6cb0397cc",
+      "name": "Recibir consulta",
+      "webhookId": "96c9e93d-e509-4fb8-b34b-dd17a0fc0bf5"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Sos un asistente administrativo especializado en consultas sobre proveedores.\n\nObjetivo:\nResponder consultas utilizando la herramienta de consulta de proveedores cuando necesites información específica de un proveedor.\n\nReglas:\n- Respondé siempre en español.\n- Consultá la herramienta antes de afirmar datos específicos sobre proveedores.\n- No inventes nombres, códigos, condiciones de pago ni estados documentales.\n- Si no encontrás un proveedor o un dato, indicá claramente que no está disponible.\n- Respondé de forma clara, breve y profesional.\n- No autorices pagos ni realices cambios en datos de proveedores.",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "51a22f34-e162-446c-a5e4-664571c2bdad",
+      "name": "Agente de proveedores"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "1c86d28e-0def-4d85-a4ce-7683a8002841",
+      "name": "Modelo IA Groq",
+      "credentials": {
+        "groqApi": {
+          "id": "68VLiMmT8yiBmOJB",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11gk9GFQFcDdEcJVAb4ZRc7iKyZBQbQhCSiZDySqgVUQ",
+          "mode": "list",
+          "cachedResultName": "Datos de proveedores",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11gk9GFQFcDdEcJVAb4ZRc7iKyZBQbQhCSiZDySqgVUQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Proveedores ficticios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11gk9GFQFcDdEcJVAb4ZRc7iKyZBQbQhCSiZDySqgVUQ/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Codigo",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        208
+      ],
+      "id": "6158ea2d-44a9-4036-aa57-f0e6fc0ef883",
+      "name": "Buscar proveedor en Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2rHkL2zJZOamexNW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0CA1HA4JPR",
+          "mode": "list",
+          "cachedResultName": "canal_asistente-de-proveedores"
+        },
+        "text": "={{ 'Consulta: ' + $('Recibir consulta').first().json.chatInput + '\\nRespuesta: ' + $('Agente de proveedores').first().json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        592,
+        0
+      ],
+      "id": "5cc53e3b-fb96-495c-b16b-42cedde0cd1d",
+      "name": "Registrar consulta en Slack",
+      "webhookId": "6cb543ea-10b3-4a76-bce7-a19927f058f2",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "ljF898lDqz6Wgpfi",
+          "name": "Slack account 4"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Recibir consulta": {
+      "main": [
+        [
+          {
+            "node": "Agente de proveedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de proveedores": {
+      "main": [
+        [
+          {
+            "node": "Registrar consulta en Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo IA Groq": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de proveedores",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar proveedor en Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de proveedores",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "274cd5f7-9d51-4f61-ac14-8007c28677b5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af307f47b8c4f84d302875251bd85c3d8340c6bc8f280ee1e3c177f4df865c75"
+  },
+  "nodeGroups": [],
+  "id": "dZS7LkIVSOTlcWOC",
+  "tags": []
+}
